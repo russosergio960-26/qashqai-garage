@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nissan Qashqai</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, sans-serif; background: #0f0f13; color: #e8e6e1; }
+
+.header { background: #1a1a24; border-bottom: 1px solid #2a2a3a; padding: 16px 16px 0; position: sticky; top: 0; z-index: 10; }
+.car-title { font-size: 18px; font-weight: 800; color: #fff; }
+.car-sub { font-size: 12px; color: #6b6b80; margin-bottom: 14px; margin-top: 2px; }
+.tabs { display: flex; overflow-x: auto; }
+.tab { flex-shrink: 0; padding: 10px 14px; font-size: 13px; font-weight: 600; border: none; background: none; color: #6b6b80; border-bottom: 2px solid transparent; font-family: inherit; cursor: pointer; text-decoration: none; display: inline-block; }
+.tab.active { color: #fff; border-bottom-color: #e74c3c; }
+
+.page { display: none; padding: 16px; max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
+.page.active { display: block; }
+
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stat-card { background: #1a1a24; border-radius: 10px; padding: 14px; border: 1px solid #2a2a3a; text-align: center; }
+.stat-num { font-size: 22px; font-weight: 800; }
+.stat-lbl { font-size: 11px; color: #6b6b80; margin-top: 4px; }
+
+.alert-box { background: rgba(231,76,60,.1); border: 1px solid rgba(231,76,60,.3); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+.alert-ttl { font-size: 11px; font-weight: 700; color: #e74c3c; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.alert-row { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
+
+.card { background: #1a1a24; border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid #2a2a3a; }
+.card-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #6b6b80; margin-bottom: 10px; }
+
+.irow { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #22222e; }
+.irow:last-child { border-bottom: none; padding-bottom: 0; }
+.irow-icon { font-size: 22px; width: 30px; text-align: center; flex-shrink: 0; }
+.irow-info { flex: 1; }
+.irow-title { font-size: 14px; font-weight: 600; }
+.irow-sub { font-size: 12px; color: #6b6b80; margin-top: 2px; }
+
+.badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; flex-shrink: 0; }
+.badge-green { background: rgba(46,204,113,.15); color: #2ecc71; border: 1px solid rgba(46,204,113,.3); }
+.badge-red { background: rgba(231,76,60,.15); color: #e74c3c; border: 1px solid rgba(231,76,60,.3); }
+.badge-orange { background: rgba(230,126,34,.15); color: #e67e22; border: 1px solid rgba(230,126,34,.3); }
+.badge-yellow { background: rgba(241,196,15,.15); color: #f1c40f; border: 1px solid rgba(241,196,15,.3); }
+
+.sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.sec-title { font-size: 16px; font-weight: 700; }
+.btn-add { background: #e74c3c; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; }
+
+.item-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #22222e; flex-wrap: wrap; }
+.btn-sm { background: none; border: 1px solid #2a2a3a; border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 600; color: #aaa; font-family: inherit; cursor: pointer; }
+.btn-sm-green { color: #2ecc71; border-color: rgba(46,204,113,.3); }
+.btn-sm-red { color: #e74c3c; border-color: rgba(231,76,60,.3); }
+
+/* MODAL */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 100; align-items: flex-end; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: #1a1a24; border-radius: 18px 18px 0 0; padding: 20px 16px 34px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; border: 1px solid #2a2a3a; }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.f-lbl { font-size: 11px; color: #6b6b80; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 4px; display: block; }
+.f-in { width: 100%; background: #0f0f13; border: 1px solid #2a2a3a; border-radius: 8px; padding: 12px; color: #e8e6e1; font-size: 16px; margin-bottom: 12px; font-family: inherit; outline: none; -webkit-appearance: none; appearance: none; }
+.icon-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.icon-btn { font-size: 20px; background: none; border: 1px solid #2a2a3a; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+.icon-btn.sel { background: rgba(231,76,60,.15); border-color: #e74c3c; }
+.btn-save { width: 100%; background: #e74c3c; color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 4px; }
+.btn-cancel { width: 100%; background: none; color: #6b6b80; border: 1px solid #2a2a3a; border-radius: 10px; padding: 12px; font-size: 14px; font-family: inherit; cursor: pointer; margin-top: 8px; }
+
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #2ecc71; color: #fff; padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; z-index: 999; display: none; white-space: nowrap; }
+
+.empty { text-align: center; padding: 40px 20px; color: #6b6b80; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+    <span style="font-size:24px">🚙</span>
+    <div>
+      <div class="car-title">Nissan Qashqai</div>
+      <div class="car-sub" id="car-sub">caricamento...</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" id="tab-btn-dash" onclick="showPage('dash')">📊 Dashboard</button>
+    <button class="tab" id="tab-btn-sc" onclick="showPage('sc')">📅 Scadenze</button>
+    <button class="tab" id="tab-btn-man" onclick="showPage('man')">🔧 Manutenzioni</button>
+    <button class="tab" id="tab-btn-auto" onclick="showPage('auto')">⚙️ Auto</button>
+  </div>
+</div>
+
+<div class="page active" id="page-dash"></div>
+<div class="page" id="page-sc"></div>
+<div class="page" id="page-man"></div>
+<div class="page" id="page-auto"></div>
+
+<!-- Modal Scadenza -->
+<div class="modal-bg" id="modal-sc">
+  <div class="modal" id="modal-sc-inner">
+    <div class="modal-title" id="modal-sc-title">Nuova Scadenza</div>
+    <input type="hidden" id="sc-edit-id">
+    <label class="f-lbl">TIPO</label>
+    <input class="f-in" id="sc-tipo" placeholder="Bollo, Assicurazione, Revisione…">
+    <label class="f-lbl">ICONA</label>
+    <div class="icon-row" id="sc-icons">
+      <button class="icon-btn sel" type="button" onclick="selIcon(this,'sc-icons')">📋</button>
+      <button class="icon-btn" type="button" onclick="selIcon(this,'sc-icons')">🛡️</button>
+      <button class="icon-btn" type="button" onclick="selIcon(this,'sc-icons')">🔍</button>
+      <button class="icon-btn" type="button" onclick="selIcon(this,'sc-icons')">💳</button>
+      <button class="icon-btn" type="button" onclick="selIcon(this,'sc-icons')">🏷️</button>
+      <button class="icon-btn" type="button" onclick="selIcon(this,'sc-icons')">📄</button>
+      <button class="icon-btn" type="button" onclick="selIcon(this,'sc-icons')">🚗</button>
+      <button class="icon-btn" type="button" onclick="selIcon(this,'sc-icons')">⚙️</button>
+    </div>
+    <label class="f-lbl">DATA SCADENZA</label>
+    <input class="f-in" id="sc-data" type="date">
+    <label class="f-lbl">IMPORTO €</label>
+    <input class="f-in" id="sc-importo" type="number" inputmode="decimal" placeholder="0">
+    <label class="f-lbl">NOTE</label>
+    <input class="f-in" id="sc-note" placeholder="Note aggiuntive…">
+    <button class="btn-save" type="button" onclick="salvaScadenza()">💾 Salva</button>
+    <button class="btn-cancel" type="button" onclick="chiudiModal('modal-sc')">Annulla</button>
+  </div>
+</div>
+
+<!-- Modal Manutenzione -->
+<div class="modal-bg" id="modal-man">
+  <div class="modal">
+    <div class="modal-title" id="modal-man-title">Nuovo Intervento</div>
+    <input type="hidden" id="man-edit-id">
+    <label class="f-lbl">TIPO INTERVENTO</label>
+    <input class="f-in" id="man-tipo" placeholder="Tagliando, Cambio gomme, Freni…">
+    <label class="f-lbl">DATA</label>
+    <input class="f-in" id="man-data" type="date">
+    <label class="f-lbl">CHILOMETRI</label>
+    <input class="f-in" id="man-km" type="number" inputmode="numeric" placeholder="km">
+    <label class="f-lbl">COSTO €</label>
+    <input class="f-in" id="man-costo" type="number" inputmode="decimal" placeholder="0">
+    <label class="f-lbl">OFFICINA</label>
+    <input class="f-in" id="man-officina" placeholder="Nome officina">
+    <label class="f-lbl">NOTE</label>
+    <input class="f-in" id="man-note" placeholder="Dettagli lavori…">
+    <button class="btn-save" type="button" onclick="salvaManutenzione()">💾 Salva</button>
+    <button class="btn-cancel" type="button" onclick="chiudiModal('modal-man')">Annulla</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Salvato!</div>
+
+<script type="text/javascript">
+(function() {
+
+var CHIAVE = 'qashqai3';
+
+var datiDefault = {
+  auto: { targa: 'XX000XX', anno: 2020, km: 45000 },
+  scadenze: [
+    { id: 1, tipo: 'Bollo', scadenza: '2025-06-30', importo: 210, pagato: false, icon: '📋', note: '' },
+    { id: 2, tipo: 'Assicurazione RCA', scadenza: '2025-09-15', importo: 680, pagato: false, icon: '🛡️', note: '' },
+    { id: 3, tipo: 'Revisione', scadenza: '2026-03-01', importo: 65, pagato: false, icon: '🔍', note: '' }
+  ],
+  manutenzioni: [
+    { id: 1, tipo: 'Tagliando', data: '2024-09-10', km: 40000, costo: 320, officina: 'AutoCenter', note: 'Olio 5W30, filtri' },
+    { id: 2, tipo: 'Cambio gomme', data: '2024-11-05', km: 42000, costo: 80, officina: 'Gommista Rossi', note: 'Invernali' }
+  ]
+};
+
+var dati;
+try {
+  var salvato = localStorage.getItem(CHIAVE);
+  dati = salvato ? JSON.parse(salvato) : datiDefault;
+} catch(e) {
+  dati = datiDefault;
+}
+
+function salva() {
+  try { localStorage.setItem(CHIAVE, JSON.stringify(dati)); } catch(e) {}
+  var t = document.getElementById('toast');
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 1500);
+}
+
+function giorni(str) {
+  var oggi = new Date(); oggi.setHours(0,0,0,0);
+  return Math.ceil((new Date(str) - oggi) / 86400000);
+}
+
+function classeBadge(g) {
+  if (g < 0) return 'badge badge-red';
+  if (g < 30) return 'badge badge-orange';
+  if (g < 90) return 'badge badge-yellow';
+  return 'badge badge-green';
+}
+
+function testoBadge(g, pagato) {
+  if (pagato) return '✓ Pagato';
+  if (g < 0) return 'SCADUTO';
+  if (g === 0) return 'Oggi!';
+  return g + ' giorni';
+}
+
+function classeBadgePagato(pagato) {
+  return pagato ? 'badge badge-green' : '';
+}
+
+function formatData(s) {
+  if (!s) return '—';
+  return new Date(s).toLocaleDateString('it-IT');
+}
+
+function formatNum(n) {
+  return (+(n)||0).toLocaleString('it');
+}
+
+function aggiornaTestoAuto() {
+  document.getElementById('car-sub').textContent = dati.auto.targa + ' · ' + dati.auto.anno + ' · ' + formatNum(dati.auto.km) + ' km';
+}
+
+window.showPage = function(nome) {
+  var pagine = ['dash','sc','man','auto'];
+  pagine.forEach(function(p) {
+    document.getElementById('page-'+p).classList.remove('active');
+    document.getElementById('tab-btn-'+p).classList.remove('active');
+  });
+  document.getElementById('page-'+nome).classList.add('active');
+  document.getElementById('tab-btn-'+nome).classList.add('active');
+  if (nome === 'dash') renderDash();
+  else if (nome === 'sc') renderSc();
+  else if (nome === 'man') renderMan();
+  else if (nome === 'auto') renderAuto();
+};
+
+function renderDash() {
+  var scOrd = dati.scadenze.slice().sort(function(a,b){ return new Date(a.scadenza)-new Date(b.scadenza); });
+  var manOrd = dati.manutenzioni.slice().sort(function(a,b){ return new Date(b.data)-new Date(a.data); });
+  var urgenti = dati.scadenze.filter(function(s){ return !s.pagato && giorni(s.scadenza) < 60; });
+  var totSpeso = 0;
+  dati.manutenzioni.forEach(function(m){ totSpeso += (+m.costo||0); });
+  dati.scadenze.forEach(function(s){ if(s.pagato) totSpeso += (+s.importo||0); });
+  var aperte = dati.scadenze.filter(function(s){ return !s.pagato; }).length;
+
+  var h = '';
+
+  if (urgenti.length > 0) {
+    h += '<div class="alert-box"><div class="alert-ttl">⚠️ In scadenza presto</div>';
+    urgenti.forEach(function(s) {
+      var g = giorni(s.scadenza);
+      var c = g < 0 ? '#e74c3c' : g < 30 ? '#e67e22' : '#f1c40f';
+      h += '<div class="alert-row"><span>' + s.icon + ' ' + s.tipo + '</span><span style="color:' + c + ';font-weight:700">' + (g < 0 ? 'SCADUTO' : g === 0 ? 'Oggi!' : g + ' giorni') + '</span></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '<div class="stat-grid">';
+  h += '<div class="stat-card" style="border-color:rgba(231,76,60,.25)"><div class="stat-num" style="color:#e74c3c">' + dati.manutenzioni.length + '</div><div class="stat-lbl">Interventi</div></div>';
+  h += '<div class="stat-card" style="border-color:rgba(230,126,34,.25)"><div class="stat-num" style="color:#e67e22">' + aperte + '</div><div class="stat-lbl">Scadenze aperte</div></div>';
+  h += '<div class="stat-card" style="border-color:rgba(52,152,219,.25)"><div class="stat-num" style="color:#3498db;font-size:18px">€' + formatNum(totSpeso) + '</div><div class="stat-lbl">Totale speso</div></div>';
+  h += '<div class="stat-card" style="border-color:rgba(46,204,113,.25)"><div class="stat-num" style="color:#2ecc71;font-size:18px">' + formatNum(dati.auto.km) + '</div><div class="stat-lbl">Chilometri</div></div>';
+  h += '</div>';
+
+  h += '<div class="card"><div class="card-lbl">Prossime Scadenze</div>';
+  if (scOrd.length === 0) {
+    h += '<div style="color:#6b6b80;font-size:13px;text-align:center;padding:8px">Nessuna scadenza</div>';
+  } else {
+    scOrd.slice(0,4).forEach(function(s) {
+      var g = giorni(s.scadenza);
+      var bc = s.pagato ? 'badge-green' : (g<0?'badge-red':g<30?'badge-orange':g<90?'badge-yellow':'badge-green');
+      h += '<div class="irow"><div class="irow-icon">' + s.icon + '</div><div class="irow-info"><div class="irow-title">' + s.tipo + '</div><div class="irow-sub">' + formatData(s.scadenza) + ' · €' + s.importo + '</div></div><span class="badge ' + bc + '">' + testoBadge(g, s.pagato) + '</span></div>';
+    });
+  }
+  h += '</div>';
+
+  if (manOrd.length > 0) {
+    var m = manOrd[0];
+    h += '<div class="card"><div class="card-lbl">Ultimo Intervento</div>';
+    h += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+    h += '<div><div style="font-size:14px;font-weight:700">' + m.tipo + '</div>';
+    h += '<div style="font-size:12px;color:#6b6b80;margin-top:3px">📅 ' + formatData(m.data) + ' · 🔢 ' + formatNum(m.km) + ' km</div>';
+    if (m.officina) h += '<div style="font-size:12px;color:#6b6b80">🏪 ' + m.officina + '</div>';
+    if (m.note) h += '<div style="font-size:12px;color:#8888a0;margin-top:3px;font-style:italic">' + m.note + '</div>';
+    h += '</div><div style="font-size:17px;font-weight:800;color:#e74c3c;margin-left:10px">€' + m.costo + '</div></div></div>';
+  }
+
+  document.getElementById('page-dash').innerHTML = h;
+}
+
+function renderSc() {
+  var sc = dati.scadenze.slice().sort(function(a,b){ return new Date(a.scadenza)-new Date(b.scadenza); });
+  var h = '<div class="sec-header"><div class="sec-title">Scadenze & Documenti</div><button class="btn-add" type="button" onclick="apriModalSc()">+ Aggiungi</button></div>';
+
+  if (sc.length === 0) {
+    h += '<div class="empty">📅<br><br>Nessuna scadenza.<br>Aggiungi bollo, assicurazione, revisione…</div>';
+  } else {
+    sc.forEach(function(s) {
+      var g = giorni(s.scadenza);
+      var bc = s.pagato ? 'badge-green' : (g<0?'badge-red':g<30?'badge-orange':g<90?'badge-yellow':'badge-green');
+      h += '<div class="card">';
+      h += '<div style="display:flex;align-items:center;gap:10px">';
+      h += '<div style="font-size:26px">' + s.icon + '</div>';
+      h += '<div style="flex:1;min-width:0">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">';
+      h += '<div style="font-size:14px;font-weight:700">' + s.tipo + '</div>';
+      h += '<span class="badge ' + bc + '">' + testoBadge(g, s.pagato) + '</span></div>';
+      h += '<div style="font-size:12px;color:#6b6b80;margin-top:2px">Scade: ' + formatData(s.scadenza) + ' · <span style="color:#e8e6e1">€' + s.importo + '</span></div>';
+      if (s.note) h += '<div style="font-size:12px;color:#8888a0;margin-top:2px;font-style:italic">' + s.note + '</div>';
+      h += '</div></div>';
+      h += '<div class="item-actions">';
+      h += '<button class="btn-sm ' + (s.pagato ? 'btn-sm-green' : '') + '" type="button" onclick="togglePag(' + s.id + ')">' + (s.pagato ? '✓ Pagato' : '⬜ Segna pagato') + '</button>';
+      h += '<button class="btn-sm" type="button" onclick="apriEditSc(' + s.id + ')">✏️ Modifica</button>';
+      h += '<button class="btn-sm btn-sm-red" type="button" onclick="eliminaSc(' + s.id + ')">🗑️</button>';
+      h += '</div></div>';
+    });
+  }
+  document.getElementById('page-sc').innerHTML = h;
+}
+
+function renderMan() {
+  var mn = dati.manutenzioni.slice().sort(function(a,b){ return new Date(b.data)-new Date(a.data); });
+  var h = '<div class="sec-header"><div class="sec-title">Storico Manutenzioni</div><button class="btn-add" type="button" onclick="apriModalMan()">+ Aggiungi</button></div>';
+
+  if (mn.length === 0) {
+    h += '<div class="empty">🔧<br><br>Nessun intervento registrato.</div>';
+  } else {
+    mn.forEach(function(m) {
+      h += '<div class="card">';
+      h += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+      h += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">' + m.tipo + '</div>';
+      h += '<div style="font-size:12px;color:#6b6b80;margin-top:3px">📅 ' + formatData(m.data) + ' · 🔢 ' + formatNum(m.km) + ' km</div>';
+      if (m.officina) h += '<div style="font-size:12px;color:#6b6b80">🏪 ' + m.officina + '</div>';
+      if (m.note) h += '<div style="font-size:12px;color:#8888a0;margin-top:3px;font-style:italic">' + m.note + '</div>';
+      h += '</div><div style="font-size:17px;font-weight:800;color:#e74c3c;margin-left:10px">€' + m.costo + '</div></div>';
+      h += '<div class="item-actions">';
+      h += '<button class="btn-sm" type="button" onclick="apriEditMan(' + m.id + ')">✏️ Modifica</button>';
+      h += '<button class="btn-sm btn-sm-red" type="button" onclick="eliminaMan(' + m.id + ')">🗑️ Elimina</button>';
+      h += '</div></div>';
+    });
+    var tot = mn.reduce(function(a,m){ return a+(+m.costo||0); }, 0);
+    h += '<div style="text-align:right;font-size:13px;color:#6b6b80;padding:4px 2px 0">Totale manutenzioni: <strong style="color:#e8e6e1">€' + formatNum(tot) + '</strong></div>';
+  }
+  document.getElementById('page-man').innerHTML = h;
+}
+
+function renderAuto() {
+  var h = '<div class="sec-title" style="margin-bottom:14px">⚙️ Dati della tua Auto</div>';
+  h += '<div class="card">';
+  h += '<label class="f-lbl">TARGA</label><input class="f-in" id="cfg-targa" value="' + dati.auto.targa + '">';
+  h += '<label class="f-lbl">ANNO IMMATRICOLAZIONE</label><input class="f-in" id="cfg-anno" type="number" inputmode="numeric" value="' + dati.auto.anno + '">';
+  h += '<label class="f-lbl">CHILOMETRI ATTUALI</label><input class="f-in" id="cfg-km" type="number" inputmode="numeric" value="' + dati.auto.km + '">';
+  h += '<button class="btn-save" type="button" onclick="salvaAuto()">💾 Salva dati auto</button>';
+  h += '</div>';
+  document.getElementById('page-auto').innerHTML = h;
+}
+
+window.salvaAuto = function() {
+  var t = document.getElementById('cfg-targa');
+  var a = document.getElementById('cfg-anno');
+  var k = document.getElementById('cfg-km');
+  if (t) dati.auto.targa = t.value.toUpperCase();
+  if (a) dati.auto.anno = +a.value || dati.auto.anno;
+  if (k) dati.auto.km = +k.value || dati.auto.km;
+  salva(); aggiornaTestoAuto();
+};
+
+// SCADENZE
+window.apriModalSc = function() {
+  document.getElementById('modal-sc-title').textContent = 'Nuova Scadenza';
+  document.getElementById('sc-edit-id').value = '';
+  document.getElementById('sc-tipo').value = '';
+  document.getElementById('sc-data').value = '';
+  document.getElementById('sc-importo').value = '';
+  document.getElementById('sc-note').value = '';
+  document.querySelectorAll('#sc-icons .icon-btn').forEach(function(b,i){ b.className = 'icon-btn' + (i===0?' sel':''); });
+  document.getElementById('modal-sc').classList.add('open');
+};
+
+window.apriEditSc = function(id) {
+  var s = null;
+  dati.scadenze.forEach(function(x){ if(x.id===id) s=x; });
+  if (!s) return;
+  document.getElementById('modal-sc-title').textContent = 'Modifica Scadenza';
+  document.getElementById('sc-edit-id').value = id;
+  document.getElementById('sc-tipo').value = s.tipo;
+  document.getElementById('sc-data').value = s.scadenza;
+  document.getElementById('sc-importo').value = s.importo;
+  document.getElementById('sc-note').value = s.note || '';
+  document.querySelectorAll('#sc-icons .icon-btn').forEach(function(b){ b.className = 'icon-btn' + (b.textContent===s.icon?' sel':''); });
+  document.getElementById('modal-sc').classList.add('open');
+};
+
+window.salvaScadenza = function() {
+  var tipo = document.getElementById('sc-tipo').value.trim();
+  var data = document.getElementById('sc-data').value;
+  if (!tipo || !data) { alert('Inserisci tipo e data'); return; }
+  var iconEl = document.querySelector('#sc-icons .icon-btn.sel');
+  var icon = iconEl ? iconEl.textContent : '📋';
+  var editId = +document.getElementById('sc-edit-id').value;
+  var obj = {
+    tipo: tipo, scadenza: data, icon: icon,
+    importo: +document.getElementById('sc-importo').value || 0,
+    note: document.getElementById('sc-note').value,
+    pagato: false
+  };
+  if (editId) {
+    var idx = -1;
+    dati.scadenze.forEach(function(x,i){ if(x.id===editId) idx=i; });
+    if (idx >= 0) { obj.id = editId; obj.pagato = dati.scadenze[idx].pagato; dati.scadenze[idx] = obj; }
+  } else {
+    obj.id = Date.now();
+    dati.scadenze.push(obj);
+  }
+  salva();
+  chiudiModal('modal-sc');
+  renderSc();
+  renderDash();
+};
+
+window.togglePag = function(id) {
+  dati.scadenze.forEach(function(s){ if(s.id===id) s.pagato = !s.pagato; });
+  salva(); renderSc(); renderDash();
+};
+
+window.eliminaSc = function(id) {
+  if (!confirm('Eliminare questa scadenza?')) return;
+  dati.scadenze = dati.scadenze.filter(function(s){ return s.id !== id; });
+  salva(); renderSc(); renderDash();
+};
+
+// MANUTENZIONI
+window.apriModalMan = function() {
+  document.getElementById('modal-man-title').textContent = 'Nuovo Intervento';
+  document.getElementById('man-edit-id').value = '';
+  ['man-tipo','man-data','man-km','man-costo','man-officina','man-note'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('modal-man').classList.add('open');
+};
+
+window.apriEditMan = function(id) {
+  var m = null;
+  dati.manutenzioni.forEach(function(x){ if(x.id===id) m=x; });
+  if (!m) return;
+  document.getElementById('modal-man-title').textContent = 'Modifica Intervento';
+  document.getElementById('man-edit-id').value = id;
+  document.getElementById('man-tipo').value = m.tipo;
+  document.getElementById('man-data').value = m.data;
+  document.getElementById('man-km').value = m.km;
+  document.getElementById('man-costo').value = m.costo;
+  document.getElementById('man-officina').value = m.officina || '';
+  document.getElementById('man-note').value = m.note || '';
+  document.getElementById('modal-man').classList.add('open');
+};
+
+window.salvaManutenzione = function() {
+  var tipo = document.getElementById('man-tipo').value.trim();
+  var data = document.getElementById('man-data').value;
+  if (!tipo || !data) { alert('Inserisci tipo e data'); return; }
+  var editId = +document.getElementById('man-edit-id').value;
+  var obj = {
+    tipo: tipo, data: data,
+    km: +document.getElementById('man-km').value || 0,
+    costo: +document.getElementById('man-costo').value || 0,
+    officina: document.getElementById('man-officina').value,
+    note: document.getElementById('man-note').value
+  };
+  if (editId) {
+    var idx = -1;
+    dati.manutenzioni.forEach(function(x,i){ if(x.id===editId) idx=i; });
+    if (idx >= 0) { obj.id = editId; dati.manutenzioni[idx] = obj; }
+  } else {
+    obj.id = Date.now();
+    dati.manutenzioni.push(obj);
+  }
+  salva();
+  chiudiModal('modal-man');
+  renderMan();
+  renderDash();
+};
+
+window.eliminaMan = function(id) {
+  if (!confirm('Eliminare questo intervento?')) return;
+  dati.manutenzioni = dati.manutenzioni.filter(function(m){ return m.id !== id; });
+  salva(); renderMan(); renderDash();
+};
+
+window.chiudiModal = function(id) {
+  document.getElementById(id).classList.remove('open');
+};
+
+window.selIcon = function(btn, rowId) {
+  document.querySelectorAll('#' + rowId + ' .icon-btn').forEach(function(b){ b.className = 'icon-btn'; });
+  btn.className = 'icon-btn sel';
+};
+
+// Click fuori dal modal per chiudere
+document.getElementById('modal-sc').addEventListener('click', function(e){ if(e.target===this) chiudiModal('modal-sc'); });
+document.getElementById('modal-man').addEventListener('click', function(e){ if(e.target===this) chiudiModal('modal-man'); });
+
+// AVVIO
+aggiornaTestoAuto();
+renderDash();
+
+})();
+</script>
+</body>
+</html>
