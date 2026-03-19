@@ -266,6 +266,8 @@ window.sincronizza = function() {
           var remoto = JSON.parse(testo);
           if (remoto && remoto.auto) {
             dati = remoto;
+            // Ricarica fotoCache da dati
+            dati.manutenzioni.forEach(function(m){ if(m.fotoId && m.fotoData) fotoCache[m.fotoId]=m.fotoData; });
             cacheLocale();
             render();
             aggiornaTestoAuto();
@@ -290,49 +292,33 @@ function salvaRemoto() {
 
 function salva() { cacheLocale(); salvaRemoto(); }
 
-// Upload foto su Google Drive tramite POST
+// Salva foto inline nel JSON (ridimensionata, nessun server)
 function uploadFoto(base64, tipo, nomeFile, callback) {
-  showToast('📤 Caricamento foto...', 'info');
-  var b64 = base64.split(',')[1] || base64;
-  var url = GAS_URL + '?action=salvaFoto&nome=' + encodeURIComponent(nomeFile) + '&tipo=' + encodeURIComponent(tipo || 'image/jpeg');
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: b64
-  })
-    .then(function(r){ return r.text(); })
-    .then(function(fileId) {
-      fileId = fileId.trim();
-      if (!fileId || fileId === 'OK') { showToast('⚠️ Errore caricamento foto', 'err'); callback(null); return; }
-      showToast('✓ Foto salvata su Drive');
-      callback(fileId);
-    })
-    .catch(function() { showToast('⚠️ Errore caricamento foto', 'err'); callback(null); });
+  showToast('📤 Elaborazione foto...', 'info');
+  var img = new Image();
+  img.onload = function() {
+    var canvas = document.createElement('canvas');
+    var max = 900;
+    var w = img.width, h = img.height;
+    if (w > max || h > max) {
+      if (w > h) { h = Math.round(h * max / w); w = max; }
+      else { w = Math.round(w * max / h); h = max; }
+    }
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    var ridotta = canvas.toDataURL('image/jpeg', 0.72);
+    var fotoId = 'foto_' + Date.now();
+    fotoCache[fotoId] = ridotta;
+    showToast('\u2713 Foto salvata!');
+    callback(fotoId);
+  };
+  img.onerror = function() { showToast('\u26a0\ufe0f Errore foto', 'err'); callback(null); };
+  img.src = base64;
 }
 
-// Carica foto da Google Drive
-function caricaFoto(fileId, imgEl) {
-  if (fotoCache[fileId]) {
-    imgEl.src = fotoCache[fileId];
-    imgEl.style.display = 'block';
-    return;
-  }
-  imgEl.parentNode && (imgEl.parentNode.innerHTML = '<div class="foto-caricamento"><div class="spinner"></div></div>');
-  fetch(GAS_URL + '?action=leggiFoto&id=' + fileId)
-    .then(function(r){ return r.text(); })
-    .then(function(b64) {
-      var src = 'data:image/jpeg;base64,' + b64.trim();
-      fotoCache[fileId] = src;
-      var container = document.querySelector('[data-fotoid="'+fileId+'"]');
-      if (container) {
-        container.innerHTML = '<img src="'+src+'" class="foto-thumb" onclick="apriLightbox(\''+fileId+'\')" alt="Scontrino">';
-      }
-    })
-    .catch(function() {
-      var container = document.querySelector('[data-fotoid="'+fileId+'"]');
-      if (container) container.innerHTML = '<div style="font-size:11px;color:#e74c3c">⚠️ Errore</div>';
-    });
-}
+// Foto inline: gia in cache come base64
+function caricaFoto(fileId) { /* inline, gia in fotoCache */ }
+
 
 window.apriLightbox = function(fileId) {
   var src = fotoCache[fileId];
@@ -555,10 +541,10 @@ function renderMan() {
 
   document.getElementById('page-man').innerHTML = h;
 
-  // Carica le foto non ancora in cache
+  // Foto inline: ripristina fotoCache da fotoData
   mn.forEach(function(m) {
-    if (m.fotoId && !fotoCache[m.fotoId]) {
-      caricaFoto(m.fotoId, null);
+    if (m.fotoId && m.fotoData && !fotoCache[m.fotoId]) {
+      fotoCache[m.fotoId] = m.fotoData;
     }
   });
 }
@@ -605,7 +591,7 @@ window.aggiungiFotoAIntervento = function(id) {
       var nome = 'scontrino_' + id + '_' + Date.now() + '.jpg';
       uploadFoto(b64, tipo, nome, function(fileId) {
         if (fileId) {
-          dati.manutenzioni.forEach(function(m){ if(m.id===id) m.fotoId=fileId; });
+          dati.manutenzioni.forEach(function(m){ if(m.id===id){ m.fotoId=fileId; m.fotoData=fotoCache[fileId]; } });
           fotoCache[fileId] = b64;
           salva();
           renderMan();
@@ -721,7 +707,7 @@ window.salvaManutenzione = function() {
   }
 
   function doSalva(fotoId) {
-    if (fotoId) obj.fotoId = fotoId;
+    if (fotoId) { obj.fotoId = fotoId; obj.fotoData = fotoCache[fotoId] || null; }
     if (editId) {
       var idx=-1; dati.manutenzioni.forEach(function(x,i){ if(x.id===editId) idx=i; });
       if(idx>=0){ obj.id=editId; dati.manutenzioni[idx]=obj; }
